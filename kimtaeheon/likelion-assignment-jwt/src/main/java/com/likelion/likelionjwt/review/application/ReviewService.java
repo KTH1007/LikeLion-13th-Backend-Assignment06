@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.Principal;
 import java.util.List;
 
 @Service
@@ -27,8 +28,8 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
 
     @Transactional
-    public void saveReview(ReviewSaveRequestDto requestDto) {
-        Member member = getMember(requestDto.memberId());
+    public void saveReview(ReviewSaveRequestDto requestDto, Principal principal) {
+        Member member = getMember(Long.parseLong(principal.getName()));
         Review review = Review.builder()
                 .rating(requestDto.rating())
                 .content(requestDto.content())
@@ -43,11 +44,11 @@ public class ReviewService {
         return ReviewInfoResponseDto.from(review);
     }
 
-    public ReviewListResponseDto reviewFindMember(Long id, Pageable pageable) {
-        Member member = getMember(id);
+    public ReviewListResponseDto reviewFindMember(Pageable pageable, Principal principal) {
+        Long memberId = Long.parseLong(principal.getName());
 
         // 사용자가 작성한 리뷰를 페이지로 리턴
-        Page<Review> reviews = reviewRepository.findPageByMemberMemberId(id, pageable);
+        Page<Review> reviews = reviewRepository.findPageByMemberMemberId(memberId, pageable);
         List<ReviewInfoResponseDto> reviewInfoResponseDtos = reviews.stream()
                 .map(ReviewInfoResponseDto::from)
                 .toList();
@@ -57,15 +58,24 @@ public class ReviewService {
 
     // 리뷰 수정
     @Transactional
-    public void reviewUpdate(Long id, ReviewUpdateRequestDto reviewUpdateRequestDto) {
+    public void reviewUpdate(Long id, ReviewUpdateRequestDto reviewUpdateRequestDto, Principal principal) {
+        Long memberId = Long.parseLong(principal.getName());
         Review review = getReview(id);
+
+        if (!review.getMember().getMemberId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.REVIEW_ACCESS_DENIED_EXCEPTION, ErrorCode.REVIEW_ACCESS_DENIED_EXCEPTION.getMessage());
+        }
         review.update(reviewUpdateRequestDto);
     }
 
     // 리뷰 삭제
     @Transactional
-    public void reviewDelete(Long id) {
+    public void reviewDelete(Long id, Principal principal) {
+        Long memberId = Long.parseLong(principal.getName());
         Review review = getReview(id);
+        if (!review.getMember().getMemberId().equals(memberId)) {
+            throw new BusinessException(ErrorCode.REVIEW_ACCESS_DENIED_EXCEPTION, ErrorCode.REVIEW_ACCESS_DENIED_EXCEPTION.getMessage());
+        }
         reviewRepository.delete(review);
     }
 

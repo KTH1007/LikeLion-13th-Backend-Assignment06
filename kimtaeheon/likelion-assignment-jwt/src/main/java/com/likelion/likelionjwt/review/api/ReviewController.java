@@ -14,6 +14,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/reviews")
@@ -22,15 +24,15 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @PostMapping("/save")
-    public ApiResTemplate<String> reviewSave(@RequestBody @Valid ReviewSaveRequestDto requestDto) {
-        reviewService.saveReview(requestDto);
+    public ApiResTemplate<String> reviewSave(@RequestBody @Valid ReviewSaveRequestDto requestDto, Principal principal) {
+        reviewService.saveReview(requestDto, principal);
         return ApiResTemplate.successWithNoContent(SuccessCode.REVIEW_SAVE_SUCCESS);
     }
 
-    @GetMapping("/member/{id}")
-    public ApiResTemplate<ReviewListResponseDto> reviewFindAll(@PathVariable("id") Long id,
-                                                            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.ASC) Pageable pageable) {
-        ReviewListResponseDto reviewListResponseDto = reviewService.reviewFindMember(id, pageable);
+    @GetMapping()
+    public ApiResTemplate<ReviewListResponseDto> reviewFindMember(@PageableDefault(size = 10, sort = "id", direction = Sort.Direction.ASC) Pageable pageable,
+                                                               Principal principal) {
+        ReviewListResponseDto reviewListResponseDto = reviewService.reviewFindMember(pageable, principal);
         return ApiResTemplate.successResponse(SuccessCode.GET_SUCCESS, reviewListResponseDto);
     }
 
@@ -43,15 +45,15 @@ public class ReviewController {
     // 리뷰 수정
     @PatchMapping("/{id}")
     public ApiResTemplate<String> reviewUpdate(@PathVariable("id") Long id,
-                                            @RequestBody @Valid ReviewUpdateRequestDto reviewUpdateRequestDto) {
-        reviewService.reviewUpdate(id, reviewUpdateRequestDto);
+                                            @RequestBody @Valid ReviewUpdateRequestDto reviewUpdateRequestDto, Principal principal) {
+        reviewService.reviewUpdate(id, reviewUpdateRequestDto, principal);
         return ApiResTemplate.successWithNoContent(SuccessCode.REVIEW_UPDATE_SUCCESS);
     }
 
     // 리뷰 삭제
     @DeleteMapping("/{id}")
-    public ApiResTemplate<String> reviewDelete(@PathVariable("id") Long id) {
-        reviewService.reviewDelete(id);
+    public ApiResTemplate<String> reviewDelete(@PathVariable("id") Long id, Principal principal) {
+        reviewService.reviewDelete(id, principal);
         return ApiResTemplate.successWithNoContent(SuccessCode.REVIEW_DELETE_SUCCESS);
     }
 }

@@ -10,6 +10,11 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
 
     /**
+     * 403 FORBIDDEN
+     */
+    REVIEW_ACCESS_DENIED_EXCEPTION(HttpStatus.FORBIDDEN, "해당 리뷰에 대한 권한이 없습니다.", "FORBIDDEN_403"),
+
+    /**
      * 404 NOT FOUND
      */
     MEMBER_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "해당 사용자가 없습니다. memberId = ", "NOT_FOUND_404"),
